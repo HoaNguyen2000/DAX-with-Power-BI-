@@ -1,0 +1,120 @@
+                                                  LESSON 1: CONDITIONS
+                                                  
+                                                  
+SELECT * FROM [Orders] 
+where ShipperID = 2
+ AND EmployeeID >3 
+AND CustomerID>55 
+AND CustomerID LIKE '6%' 
+AND OrderDate LIKE '%96%' 
+ORDER BY EmployeeID DESC
+                                              
+                                              
+                                              LESSON 2 : LEFT JOIN
+                                              
+                                              
+SELECT sales.*, 
+product.product_name 
+FROM sales
+ LEFT JOIN product ON sales.product_id= product.product_id 
+where product.product_name LIKE '%Shoes%'
+                                                
+                                                
+                                                LESSON 3: COUNT, SUM
+                                                
+                                                
+SELECT category, 
+COUNT(sales_id),
+sum(net_sales) 
+FROM sales 
+GROUP BY category
+                                                   
+                                                   
+                                                   LESSON 4: CASE WHEN 
+                                                   
+                                                   
+TH1 
+select *, case 
+WHEN customer_source= 'Twitter'then 'Social'
+WHEN customer_source = 'Facebook' then 'Social'
+WHEN customer_source='Google' then 'Social'
+else customer_source end
+from sales
+TH2
+SELECT *, 
+CASE 
+   WHEN net_sales>=400 THEN 'HIGHT VALUE'
+   WHEN net_sales >=100 THEN 'MEDIUM VALUE'
+ ELSE 'LOW VALUE'
+END
+FROM sales
+
+
+                            LESSON 5: CUSTOMERS CLASSIFICATION (TEMPORARY TABLE, CASE WHEN)
+                            
+                            
+WITH CUSTOMER_ATTRIBUTES AS (
+select customer_name, 
+SUM(net_sales) AS LIFETIME_VALUE
+FROM sales
+GROUP BY customer_name
+                 )
+    select customer_name,
+    LIFETIME_VALUE,
+    CASE 
+    WHEN LIFETIME_VALUE >10000 THEN 'VIP CUSTOMER'
+    WHEN LIFETIME_VALUE <6000 THEN 'KH THUONG'
+    ELSE 'KH TRUNG THANH' 
+    END
+    FROM CUSTOMER_ATTRIBUTES 
+    
+
+
+
+
+
+                                     LESSON 6: FINAL POST SUMMARY
+
+KẾT HỢP NOT + between
+        NOT + in
+        NOT + LIKE 
+HÀM MAX, MIN , AVERAGE,
+EX: SELECT customer_source,
+MAX(net_sales),
+MIN(net_sales),
+AVERAGE(net_sales),
+count( distinct customer_id) Giúp đếm không trùng lặp ID
+from sales
+
+
+THU TU:   
+SELECT 
+FROM 
+WHERE
+GROUP BY
+ORDER BY
+
+
+-- SELECT * net_sales+tax ( NGHĨA LÀ LẤY TOÀN CỘT TỪ DẤU * , VÀ THÊM CỘT MỚI LÀ paid amouamount)
+SELECT * , net_sales+tax AS paid_amouamount   
+-- CO THE DUNG +-*/
+FROM sales
+WHERE 
+    sales_id >=.100 sales_id <=200  ( CÓ THỂ THAY THẾ BẰNG ( NOT) between 100 AND 200) DÙNG ĐƯỢC CHO NGÀY GIỜ NỮA 
+                                                        NOT : Không phải là 100 ANDand 200 )
+    
+    
+    WHERE customer_source= 'Twitter'then 'Social'
+WHERE customer_source = 'Facebook' then 'Social'
+WHERE customer_source='Google' then 'Social'       ( DÙNG HÀM IN) DÙNG NHƯ SAU)    
+
+SELECT * FROM sales
+WHERE customer_source  ( NOT ) IN ('Twitter','Google','Facebook')
+                    NOT : Không phải là Twitter','Google','Facebook' )
+GROUP BY 
+ORDER BY
+
+KẾT HỢP GROUP BY + ORDER BYBY
+SELECT customer_source,SUM( net_sales) FROM sales   
+ GROUP BY customer_source
+ ORDER BY SUM( net_sales) DESC
