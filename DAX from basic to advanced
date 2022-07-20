@@ -230,43 +230,35 @@ RETURN
   
                                                           CASE 9: NEW CUSTOMER         
                                                           
-VAR DS_KH =
-    CALCULATETABLE(
-        VALUES(Sales[CustomerKey]),
-        ALLSELECTED()
-    )
-VAR ADD_MinDate = 
-    ADDCOLUMNS(
-        DS_KH,
-        "@MinDate",
-        CALCULATE(
-            MIN(Sales[Order Date]),
-            ALLSELECTED('Date')
-        )
-    )
-VAR Filter_Date =
-    FILTER(
-        ADD_MinDate,
-        [@MinDate] in VALUES('Date'[Date])
-    )
-Return
-    COUNTROWS(Filter_Date)
-    
-                                                      CASE 10: Returning Customer
-                                                      
-   VAR CURRENT_=
+VAR CURRENT_KH=
           VALUES(Sales[CustomerKey]) 
- VAR CURRENT_DATE=
+ VAR MIN_CURRENT_DATE=
          MIN(Sales[Order Date])
  VAR PASTCUSTOMER= 
         CALCULATETABLE(
             VALUES(Sales[CustomerKey]),
         ALL('Date'[Date]),
-        'Date'[Date]<CURRENT_DATE)
+        'Date'[Date]<MIN_CURRENT_DATE)
  VAR NEWCUSTOMER_= 
-        INTERSECT(CURRENT_,PASTCUSTOMER)
+        EXCEPT(CURRENT_KH,PASTCUSTOMER)
  RETURN
         COUNTROWS(NEWCUSTOMER_)
+    
+                                                      CASE 10: Returning Customer
+                                                      
+   VAR CURRENT_KH=
+          VALUES(Sales[CustomerKey]) 
+ VAR MIN_CURRENT_DATE=
+         MIN(Sales[Order Date])
+ VAR PASTCUSTOMER= 
+        CALCULATETABLE(
+            VALUES(Sales[CustomerKey]),
+        ALL('Date'[Date]),
+        'Date'[Date]<MIN_CURRENT_DATE)
+ VAR RETURNING_CUSTOMER=
+        INTERSECT(CURRENT_KH,PASTCUSTOMER)
+ RETUrN
+      COUNTROWS(RETURNING_CUSTOMER)
                                                        
                                                        
                                                          CASE 11: Loyal Customer
