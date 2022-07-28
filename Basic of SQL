@@ -1,34 +1,7 @@
-                                                  LESSON 1: SQL Window Function (SQL OVER PARTITION BY)
-                                                  
-                                                  
-WITH NET_SALES_BY_SORCE_CATEGORY AS (
-select customer_source , 
-category, SUM(net_sales) AS net_sales
-FROM sales
-GROUP BY 
-customer_source,
-category
-)
 
-SELECT *,
-   RANK() OVER ( ORDER BY net_sales DESC )
-FROM 
-  NET_SALES_BY_SORCE_CATEGORY
-
-----------------------------------------------
-
-
-WITH NET_SALES_BY_SORCE_CATEGORY AS (
-select customer_source , category, SUM(net_sales) AS net_sales
-FROM sales
-GROUP BY customer_source, category
-)
-
-SELECT *, RANK() OVER ( PARTITION BY customer_source ORDER BY net_sales DESC )
-FROM NET_SALES_BY_SORCE_CATEGORY
                                               
                                               
-                                              LESSON 2 : LEFT JOIN
+                                              LESSON 1 : LEFT JOIN
                                               
                                               
 SELECT sales.*, 
@@ -38,7 +11,7 @@ FROM sales
 where product.product_name LIKE '%Shoes%'
                                                 
                                                 
-                                                LESSON 3: Case - When - End - Group by
+                                                LESSON 2: Case - When - End - Group by
                                                 
                                                 
 Select 
@@ -59,7 +32,7 @@ Group by
  Order By Tổng_doanh_thu DESC
                                                    
                                                    
-                                                   LESSON 4: WITH....AS
+                                                   LESSON 3: WITH....AS
                                                    
                                                    
 with customer_attibutes AS (     
@@ -80,7 +53,7 @@ Select
  From customer_attibutes
  order by Total DESC
 
-                            LESSON 5: CUSTOMERS CLASSIFICATION (TEMPORARY TABLE, CASE WHEN)
+                            LESSON 4: CUSTOMERS CLASSIFICATION (TEMPORARY TABLE, CASE WHEN)
                             
                             
 WITH CUSTOMER_ATTRIBUTES AS (
@@ -103,7 +76,7 @@ GROUP BY customer_name
 
 
 
-                                     LESSON 6: FINAL POST SUMMARY
+                                     LESSON 5: FINAL POST SUMMARY
 
 KẾT HỢP NOT + between
         NOT + in
