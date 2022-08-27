@@ -1,19 +1,125 @@
+                                                             WINDOWS FUNCTION
+Case 1: Trong quý 3/2013- Danh sách khách hàng mua từ 3 đơn hàng trở lên. Và cho biết tổng số đơn hàng mà họ mua trong quý này
+WITH T1 AS
+(
+SELECT 
+   CustomerID,
+   ROW_NUMBER() OVER(PARTITION BY CustomerID order by CustomerID) as STT,
+   COUNT(*) OVER(PARTITION BY CustomerID) AS [SO DON HANG]
+   FROM [Sales].[SalesOrderHeader]
+   WHERE 
+        YEAR(OrderDate)=2013 and DATEPART(quarter,OrderDate)=3 
+		)
+SELECT 
+CustomerID,
+[SO DON HANG]
+FROM
+ T1
+ WHERE
+ [SO DON HANG] >=3
+----------------------------------------------------------------------
+Case 2: Tính doanh thu theo từng tháng, sau đó phân thành 5 nhóm theo từng doanh thu 
 
-                                              
-                                              
-                                              LESSON 1 : LEFT JOIN
-                                              
-                                              
-SELECT sales.*, 
-product.product_name 
-FROM sales
- LEFT JOIN product ON sales.product_id= product.product_id 
-where product.product_name LIKE '%Shoes%'
+WITH hoadon AS (
+SELECT 
+MONTH(Orderdate) as thang,
+Sum(TotalDue) as Doanh_thu
+
+FROM Sales.SalesOrderHeader
+WHERE 
+     YEAR(Orderdate)=2013
+GROUP BY
+   MONTH(Orderdate)
+   )
+
+   SELECT
+   thang,
+    NTILE(5) OVER (ORDER BY Doanh_thu) AS GROUP_DT
+   FROM hoadon
+
+----------------------------------------------------------------------
+
+--Case 3: Xếp hạng điện thọại Iphone được phân làm 3 nhóm có tên 'hight','nommal','low'
+SELECT item,
+  case 
+  when XEP_HANG = 1 then 'hight'
+  when XEP_HANG =2 then 'nommal'
+  else 'low'
+  end as tbl
+  from (
+SELECT item,
+NTILE(3) over( order by item desc) AS XEP_HANG
+from Orders)
+  WHERE PRODUCT_NAME =’PHONE’
+----------------------------------------------------------------------
+
+Case 4: Running Total
+SELECT CustomerID,
+CAST(OrderDate AS Date) as Ngày, 
+SUM(TotalDue) OVER( ORDER BY OrderDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT NOW) as a,
+FROM [Sales].[SalesOrderHeader]
+WHERE SalesOrderID= 11300
+ORDER BY SalesOrderID
+----------------------------------------------------------------------
+
+--Case 5: So sánh TotalDue với previous TotalDue và TotalDue after dựa trên OrderDate ( dùng lag, lead)
+select 
+           OrderDate , 
+           TotalDue, 
+   coalesce(
+            TotalDue-lag(TotalDue) over( order by TotalDue),
+     0) as weight_quartile_lag, 
+ coalesce( 
+           TotalDue-lead(TotalDue) over( order by TotalDue),
+  0)   as weight_quartile_lead
+ from
+     [Sales].[SalesOrderHeader] 
+
+----------------------------------------------------------------------
+--Case 6: Áp dụng subquerry trong where 
+
+SELECT 
+ProductName, Price
+FROM [Products]
+where
+   Price>= 
+          ( SELECT 
+              AVG(SupplierID) 
+                 from [Products])
+           and 
+
+Price >= 
+        (SELECT 
+           AVG(
+             OrderDetails.Quantity ) from Products
+                left join OrderDetails ON Products.ProductID= OrderDetails.ProductID)
+
+----------------------------------------------------------------------
+
+-- Case 7: Tìm  duplicate records trong bảng Orders
+SELECT item, COUNT(*) AS CNT  
+    FROM Orders  
+    GROUP BY item
+HAVING COUNT(*)>1  
+
+----------------------------------------------------------------------
+
+--Case 8: Tìm sản phẩm có doanh thu cao thứ 2 
+	Select max(TotalDue) as Salary
+    FROM [Sales].[SalesOrderHeader] 
+WHERE TotalDue <(Select max(TotalDue) from [Sales].[SalesOrderHeader] ) 
+
+----------------------------------------------------------------------
+
+--Case 9: Sử dụng first value, last value để tìm highest_amount và lowest_amount
+ select item,
+first_value(item) over(order by amount desc) as highest_amount,
+last_value(item) over(order by amount desc) as lowest_amount
+from 
+Orders
+----------------------------------------------------------------------
                                                 
-                                                
-                                                LESSON 2: Case - When - End - Group by
-                                                
-                                                
+--Case 10: Kết hợp Case - When - End - Group by                                                                                             
 Select 
  CASE 
    When customer_source IN ('Facebook','Twitter','Google') Then 'Social'
@@ -28,96 +134,61 @@ Select
 From sales
 Group by
   platform, Phân_loại_giá_trị_sản_phẩm
- 
+
  Order By Tổng_doanh_thu DESC
-                                                   
-                                                   
-                                                   LESSON 3: WITH....AS
-                                                   
-                                                   
-with customer_attibutes AS (     
-   Select customer_name
-      ,sum(net_sales) as Total              
-      ,sum(quantity)    as Soluong          
-   From sales
-   Group by customer_name
- )  
+----------------------------------------------------------------------
 
-Select                                     
- customer_name,Soluong,Total,
-    Case
-        When Total >=10000 then 'VIP'
-        When Total >=5000 then 'Loyatty'
-        Else 'Normal'
-    End
- From customer_attibutes
- order by Total DESC
-
-                            LESSON 4: CUSTOMERS CLASSIFICATION (TEMPORARY TABLE, CASE WHEN)
-                            
-                            
-WITH CUSTOMER_ATTRIBUTES AS (
-select customer_name, 
-SUM(net_sales) AS LIFETIME_VALUE
+--Case 11: Sử dụng hàm LEFT JOIN                                                                                           
+SELECT sales.*, 
+product.product_name 
 FROM sales
-GROUP BY customer_name
-                 )
-    select customer_name,
-    LIFETIME_VALUE,
-    CASE 
-    WHEN LIFETIME_VALUE >10000 THEN 'VIP CUSTOMER'
-    WHEN LIFETIME_VALUE <6000 THEN 'KH THUONG'
-    ELSE 'KH TRUNG THANH' 
-    END
-    FROM CUSTOMER_ATTRIBUTES 
-    
+ LEFT JOIN product ON sales.product_id= product.product_id 
+where product.product_name LIKE '%Shoes%'	
+
+  DECLARE  TẠO CON TRỎ ẢO
+--B3: KHAI BAO BIEN   DECLARE @TENBIEN1
+DECLARE @MANV INT, @DOANHTHU INT 
+--B1: KHAI BAO CON TRO
+DECLARE TENCONTRO CURSOR
+FOR SELECT....FROM....TBLA
+--BAT CON TRO LEN
+OPEN TENCONTRO
+
+FETCH NEXT FROM TENCONTRO INTO @MASO,@SOLUONG--LẤY TỪ TÊN CON TRỎ, MAF CON TRỎ NÀY LẤY TỪ 2 CỘT MÃ SỐ, SỐ LƯỢNG 
+--LAY DONG 
+WHILE @@FETCH_STATUS =0
+BEGIN
+       IF @DOANH >10 
+	   BEGIN 
+	        UPDATE TBLA SET TIENTHUONG =3   WHERE MANV = @MANV  --NGHIÃ LÀ NẾU SỐ LƯỢNG LỚN HƠN 10 THÌ SE ĐƯỢC CẬP NHẬT VÀO BẢNG TBLA VỚI TIỀN THƯỞNG LÀ 5  
+		                              -- ĐIỀU KIỆN CHO NÓ BẰNG NHAU ĐỂ MÀ GIÚP ĐỐI CHIẾU 
+
+		ELSE 
+		BEGIN 
+		     UPDATE TBLA SET TIENTHUONG =0 WHERE MANV = @MANV    --NGƯỢC LẠI LÀ SẼ LÀ 0 
+		   --NGƯỢC LẠI THÌ NHƯ NÀO ĐÓ, TÙY                            
+		END
+		FETCH NEXT FROM TENCONTRO INTO @MASO,@SOLUONG (--BƯỚC NHẢY, CÓ THÌ NÓ SẼ LÀM TIẾP, KHÔNG THÌ NÓ SẼ KHÔN LÀM)
+END
+
+CLOSE TENCONTRO --ĐÓNG CON TRỎ
+DEALLOCATE TENCONTRO ---XÓA BỘ NHỚ SAU KHI LÀM XONG 
+----------------------------------------------------------------------
+Hàm trigger 
 
 
+--TRONG NGÀY HÔM NAY, KHÔNG ĐƯỢC AI THÊM XÓA ,SỬA 
+CREATE TRIGGER TENTRIGGER ON TENTABLE
+FOR INSERT,UPDATE,DELETE  ( --INSERT,UPDATE,DELETE  tùy mình cho )
+AS
+BEGIN 
+-- WRITTING CODE :TRONG NGÀY HÔM NAY, KHÔNG ĐƯỢC AI THÊM XÓA ,SỬA 
+--GETDATE(): LẤY RA NGÀY HIỆN TẠI CỦA HỆ THỐNG ....HÔM NAY LÀ NGÀY 25/8/2022 , Dw (day of week) giúp lấy ra thứ trong tuần 
+   if DATEPART(Dw,GETDATE() =1   --( sô 1 tương ứng chủ nhật, số 2 thứ 2, số 3 thứ 3, tuwong tự 4,5,6,7 )
+   begin  
+       print 'TRONG NGÀY HÔM NAY, KHÔNG ĐƯỢC AI THÊM XÓA ,SỬA ' --nó sẽ in ra cái tên như này 
+	   rollback tran ---nghĩa là cho dù họ có chỉnh sửa hay làm gì đó , thì cái dữ liệu cũng sẽ quay lại ban đầu 
+   end 
+End
 
 
-
-                                     LESSON 5: FINAL POST SUMMARY
-
-KẾT HỢP NOT + between
-        NOT + in
-        NOT + LIKE 
-HÀM MAX, MIN , AVERAGE,
-EX: SELECT customer_source,
-MAX(net_sales),
-MIN(net_sales),
-AVERAGE(net_sales),
-count( distinct customer_id) Giúp đếm không trùng lặp ID
-from sales
-
-
-THU TU:   
-SELECT 
-FROM 
-WHERE
-GROUP BY
-ORDER BY
-
-
--- SELECT * net_sales+tax ( NGHĨA LÀ LẤY TOÀN CỘT TỪ DẤU * , VÀ THÊM CỘT MỚI LÀ paid amouamount)
-SELECT * , net_sales+tax AS paid_amouamount   
--- CO THE DUNG +-*/
-FROM sales
-WHERE 
-    sales_id >=.100 sales_id <=200  ( CÓ THỂ THAY THẾ BẰNG ( NOT) between 100 AND 200) DÙNG ĐƯỢC CHO NGÀY GIỜ NỮA 
-                                                        NOT : Không phải là 100 ANDand 200 )
-    
-    
-    WHERE customer_source= 'Twitter'then 'Social'
-WHERE customer_source = 'Facebook' then 'Social'
-WHERE customer_source='Google' then 'Social'       ( DÙNG HÀM IN) DÙNG NHƯ SAU)    
-
-SELECT * FROM sales
-WHERE customer_source  ( NOT ) IN ('Twitter','Google','Facebook')
-                    NOT : Không phải là Twitter','Google','Facebook' )
-GROUP BY 
-ORDER BY
-
-KẾT HỢP GROUP BY + ORDER BYBY
-SELECT customer_source,SUM( net_sales) FROM sales   
- GROUP BY customer_source
- ORDER BY SUM( net_sales) DESC
