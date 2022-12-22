@@ -1,0 +1,131 @@
+---#1
+SELECT r, COUNT(*) cnt
+--INTO #data
+FROM 
+	(SELECT CustomerID, DATEDIFF(DAY, MAX(OrderDate) , '2014-01-01') r
+      FROM Sales.SalesOrderHeader
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY CustomerID) h
+GROUP BY r
+ORDER BY r 
+---SELECT DATEDIFF(DAY, '2013-12-31' , '2014-01-01')
+
+---#2
+SELECT *
+	,SUM(cnt) OVER()
+	,SUM(cnt) OVER (ORDER BY r)
+	,FORMAT((SUM(cnt) OVER (ORDER BY r) * 1.0)/(SUM(cnt) OVER()),'P4')
+	--P4 Là 4 kí tự, P2 là 2 kí tự 
+FROM #data
+
+---#3
+SELECT h.* 
+	,NTILE(5) OVER (ORDER BY r)
+	,PERCENTILE_DISC(1) WITHIN GROUP (ORDER BY r) OVER ()
+FROM 
+(SELECT CustomerID, DATEDIFF(DAY, MAX(OrderDate), '2014-01-01') r
+      FROM Sales.SalesOrderHeader
+      WHERE YEAR(OrderDate) = 2013
+      GROUP BY CustomerID) h 
+
+---#4
+SELECT 
+	DATEDIFF(DAY, mindate, '2014-01-01')/numorders f, COUNT(*)							
+FROM 
+	(SELECT CustomerID, MIN(OrderDate) minDate, COUNT(*) numorders							
+      FROM Sales.SalesOrderHeader				
+      WHERE year(OrderDate) = 2013							
+      GROUP BY CustomerID) h							
+GROUP BY DATEDIFF(day, mindate, '2014-01-01')/numorders							
+ORDER BY f	
+
+---#5
+SELECT CustomerID,
+	COUNT(*) cnt,
+	SUM(subtotal),
+	AVG(subtotal),
+	RANK() OVER (ORDER BY AVG(subtotal) DESC),
+	COUNT(*) OVER (),
+	CAST(5 * (RANK() OVER (ORDER BY AVG(subtotal) DESC) - 1)/COUNT(*) OVER () as INT) + 1 as q
+FROM Sales.SalesOrderHeader	
+WHERE YEAR(OrderDate) = 2013	
+GROUP BY CustomerID
+
+---#6
+SELECT 
+	h.* 
+	,NTILE(5) OVER (ORDER BY rnk)
+FROM(
+	SELECT CustomerID,
+	RANK() OVER (ORDER BY AVG(subtotal) DESC) rnk
+FROM Sales.SalesOrderHeader	
+WHERE YEAR(OrderDate) = 2013	
+GROUP BY CustomerID) h
+ORDER BY rnk
+
+---#7
+SELECT rbin * 100 + fbin * 10 + mbin as rfm, COUNT(*)
+FROM (
+SELECT (CASE WHEN r <= 34 THEN 1 WHEN r >= 34 THEN 2
+                   WHEN r <= 113 THEN 3 WHEN r >= 113 THEN 4
+                   ELSE 5 END) as rbin,
+             (CASE WHEN f <= ... THEN 1 WHEN f >= ... THEN 2
+                   WHEN f <= ... THEN 3 WHEN f >= ... THEN 4
+                   ELSE 5 END) as fbin,
+             (CASE WHEN m >= ... THEN 1 WHEN m >= ... THEN 2
+                   WHEN m <= ... THEN 3 WHEN m >= ... THEN 4
+                   ELSE 5 END) as mbin
+FROM (SELECT CustomerID,
+			DATEDIFF(day, MAX(OrderDate), '2014-01-01') r,
+			DATEDIFF(day, MIN(OrderDate), '2014-01-01') / COUNT(*) f,
+			SUM(SubTotal) / COUNT(*) m
+        FROM Sales.SalesOrderHeader
+        WHERE year(OrderDate) = 2013
+        GROUP BY CustomerID) a 
+			) b
+GROUP BY rbin*100+fbin*10+mbin
+ORDER BY rfm
+
+---#8
+
+SELECT rfm.rbin2012*100+rfm.fbin2012*10+rfm.mbin2012 as rfm2012,
+       rfm.rbin2013*100+rfm.fbin2013*10+rfm.mbin2013 as rfm2013,
+       COUNT(*)
+FROM (SELECT CustomerID,
+             (CASE WHEN r2013 <= 380 THEN 1 WHEN r2013 <= 615 THEN 2
+                   WHEN r2013 <= 1067 THEN 3 WHEN r2013 <= 1686 THEN 4
+                   ELSE 5 END) as rbin2013,
+             (CASE WHEN f2013 <= 372 THEN 1 WHEN f2013 <= 594 THEN 2
+                   WHEN f2013 <= 974 THEN 3 WHEN f2013 <= 1628 THEN 4
+                   ELSE 5 END) as fbin2013,
+             (CASE WHEN m2013 <= 60.5 THEN 1 WHEN m2013 >= 29.95 THEN 2
+                   WHEN m2013 <= 21 THEN 3 WHEN m2013 >= 14.95 THEN 4
+                   ELSE 5 END) as mbin2013,
+             (CASE WHEN r2012 is null THEN null
+                   WHEN r2012 <= 174 THEN 1 WHEN r2012 <= 420 THEN 2
+                   WHEN r2012 <= 807 THEN 3 WHEN r2012 <= 1400 THEN 4
+                   ELSE 5 END) as rbin2012,
+             (CASE WHEN f2012 IS NULL THEN NULL
+                   WHEN f2012 <= 192 THEN 1 WHEN f2012 <= 427 THEN 2
+                   WHEN f2012 <= 807 THEN 3 WHEN f2012 <= 1400 THEN 4
+                   ELSE 5 END) as fbin2012,
+             (CASE WHEN m2012 >= 54.95 THEN 1 WHEN m2012 >= 29.23 THEN 2
+                   WHEN m2012 >= 20.25 THEN 3 WHEN m2012 >= 14.95 THEN 4
+                   ELSE 5 END) as mbin2012
+      FROM (SELECT CustomerID,
+            DATEDIFF(DAY, MAX(CASE WHEN OrderDate < '2012-12-31' THEN OrderDate END),
+                            '2013-01-01') as r2012,
+            FLOOR(DATEDIFF(DAY,MIN(CASE WHEN OrderDate < '2012-12-31' THEN OrderDate END),
+                                 '2013-01-01')/ SUM(CASE WHEN OrderDate < '2012-12-31' THEN 1.0 END)) as f2012,
+            (SUM(CASE WHEN OrderDate < '2012-12-31' THEN SubTotal END) /
+             SUM (CASE WHEN OrderDate < '2012-12-31' THEN 1.0 END )) as m2012,
+             
+			 DATEDIFF(day, MAX(OrderDate),'2014-01-01') r2013,
+             FLOOR(DATEDIFF(DAY, MIN(OrderDate), '2014-01-01') /COUNT(*)) f2013, AVG(SubTotal) m2013
+            FROM Sales.SalesOrderHeader
+            WHERE year(OrderDate) IN (2012, 2013)
+            GROUP BY CustomerID) h
+      ) rfm
+GROUP BY rfm.rbin2012*100+rfm.fbin2012*10+rfm.mbin2012,
+        rfm.rbin2013*100+rfm.fbin2013*10+rfm.mbin2013
+ORDER BY COUNT(*) DESC
