@@ -39,17 +39,6 @@ FROM
 GROUP BY DATEDIFF(day, mindate, '2014-01-01')/numorders							
 ORDER BY f	
 
----#5
-SELECT CustomerID,
-	COUNT(*) cnt,
-	SUM(subtotal),
-	AVG(subtotal),
-	RANK() OVER (ORDER BY AVG(subtotal) DESC),
-	COUNT(*) OVER (),
-	CAST(5 * (RANK() OVER (ORDER BY AVG(subtotal) DESC) - 1)/COUNT(*) OVER () as INT) + 1 as q
-FROM Sales.SalesOrderHeader	
-WHERE YEAR(OrderDate) = 2013	
-GROUP BY CustomerID
 
 ---#6
 SELECT 
