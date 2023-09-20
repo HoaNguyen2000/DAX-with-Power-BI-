@@ -1,4 +1,4 @@
-                                                             WINDOWS FUNCTION
+                                                             
 Case 1: Trong quý 3/2013- Danh sách khách hàng mua từ 3 đơn hàng trở lên. Và cho biết tổng số đơn hàng mà họ mua trong quý này
 WITH T1 AS
 (
@@ -17,7 +17,8 @@ FROM
  T1
  WHERE
  [SO DON HANG] >=3
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 Case 2: Tính doanh thu theo từng tháng, sau đó phân thành 5 nhóm theo từng doanh thu 
 
 WITH hoadon AS (
@@ -37,7 +38,8 @@ GROUP BY
     NTILE(5) OVER (ORDER BY Doanh_thu) AS GROUP_DT
    FROM hoadon
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 --Case 3: Xếp hạng điện thọại Iphone được phân làm 3 nhóm có tên 'hight','nommal','low'
 SELECT item,
@@ -51,7 +53,8 @@ SELECT item,
 NTILE(3) over( order by item desc) AS XEP_HANG
 from Orders)
   WHERE PRODUCT_NAME =’PHONE’
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 Case 4: Running Total
 SELECT CustomerID,
@@ -60,7 +63,8 @@ SUM(TotalDue) OVER( ORDER BY OrderDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURR
 FROM [Sales].[SalesOrderHeader]
 WHERE SalesOrderID= 11300
 ORDER BY SalesOrderID
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 --Case 5: So sánh TotalDue với previous TotalDue và TotalDue after dựa trên OrderDate ( dùng lag, lead)
 select 
@@ -75,7 +79,8 @@ select
  from
      [Sales].[SalesOrderHeader] 
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 --Case 6: Áp dụng subquerry trong where 
 
 SELECT 
@@ -94,7 +99,7 @@ Price >=
              OrderDetails.Quantity ) from Products
                 left join OrderDetails ON Products.ProductID= OrderDetails.ProductID)
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Case 7: Tìm  duplicate records trong bảng Orders
 SELECT item, COUNT(*) AS CNT  
@@ -102,14 +107,16 @@ SELECT item, COUNT(*) AS CNT
     GROUP BY item
 HAVING COUNT(*)>1  
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 --Case 8: Tìm sản phẩm có doanh thu cao thứ 2 
 	Select max(TotalDue) as Salary
     FROM [Sales].[SalesOrderHeader] 
 WHERE TotalDue <(Select max(TotalDue) from [Sales].[SalesOrderHeader] ) 
 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 --Case 9: Sử dụng first value, last value để tìm highest_amount và lowest_amount
  select item,
@@ -117,7 +124,8 @@ first_value(item) over(order by amount desc) as highest_amount,
 last_value(item) over(order by amount desc) as lowest_amount
 from 
 Orders
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
                                                 
 --Case 10: Kết hợp Case - When - End - Group by                                                                                             
 Select 
@@ -136,7 +144,8 @@ Group by
   platform, Phân_loại_giá_trị_sản_phẩm
 
  Order By Tổng_doanh_thu DESC
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+
 
 --Case 11: Sử dụng hàm LEFT JOIN                                                                                           
 SELECT sales.*, 
@@ -144,6 +153,7 @@ product.product_name
 FROM sales
  LEFT JOIN product ON sales.product_id= product.product_id 
 where product.product_name LIKE '%Shoes%'	
+--------------------------------------------------------------------------------------------------------------------------------------------
 
   DECLARE  TẠO CON TRỎ ẢO
 --B3: KHAI BAO BIEN   DECLARE @TENBIEN1
@@ -173,7 +183,7 @@ END
 
 CLOSE TENCONTRO --ĐÓNG CON TRỎ
 DEALLOCATE TENCONTRO ---XÓA BỘ NHỚ SAU KHI LÀM XONG 
-----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
 Hàm trigger 
 
 
@@ -190,5 +200,3 @@ BEGIN
 	   rollback tran ---nghĩa là cho dù họ có chỉnh sửa hay làm gì đó , thì cái dữ liệu cũng sẽ quay lại ban đầu 
    end 
 End
-
-
