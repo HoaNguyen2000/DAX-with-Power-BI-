@@ -1,4 +1,4 @@
-                                                             WINDOWS FUNCTION
+                                                             
 Case 1: Trong quý 3/2013- Danh sách khách hàng mua từ 3 đơn hàng trở lên. Và cho biết tổng số đơn hàng mà họ mua trong quý này
 WITH T1 AS
 (
